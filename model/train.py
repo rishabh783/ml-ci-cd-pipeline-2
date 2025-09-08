@@ -1,45 +1,38 @@
+import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelEncoder
 import joblib
-import os
 
-# Load the dataset
-data_path = os.path.join(os.path.dirname(__file__), "data", "Churn.csv")
+# --- Config ---
+# Get project root (ml-ci-cd-pipeline-2/)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # this gives .../model
+BASE_DIR = os.path.dirname(BASE_DIR)  # go one level up to project root
+
+# Data path (works on Windows + Linux)
+data_path = os.path.join(BASE_DIR, "data", "Churn.csv")
+print("📂 Loading dataset from:", data_path)
+
+# Load dataset
+if not os.path.exists(data_path):
+    raise FileNotFoundError(f"❌ Dataset not found at {data_path}")
+
 data = pd.read_csv(data_path)
 
-# Drop customerID column
-data = data.drop("customerID", axis=1)
-
-# Convert TotalCharges to numeric (some are blank strings)
-data["TotalCharges"] = pd.to_numeric(data["TotalCharges"], errors="coerce")
-data["TotalCharges"] = data["TotalCharges"].fillna(data["TotalCharges"].median())
-
-# Encode categorical variables
-label_encoders = {}
-for col in data.select_dtypes(include=["object"]).columns:
-    if col != "Churn":  # Don't encode target yet
-        le = LabelEncoder()
-        data[col] = le.fit_transform(data[col])
-        label_encoders[col] = le
-
-# Features and target
+# ----------------------------
+# Example preprocessing: assume 'Churn' is the target
 X = data.drop("Churn", axis=1)
 y = data["Churn"]
 
-# Encode target (Yes=1, No=0)
-target_encoder = LabelEncoder()
-y = target_encoder.fit_transform(y)
-
-# Split into train/test
+# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train model
-model = RandomForestClassifier(n_estimators=100, random_state=42)
+model = RandomForestClassifier(random_state=42)
 model.fit(X_train, y_train)
 
-# Save model
-joblib.dump(model, "churn_model.pkl")
-joblib.dump(label_encoders, "label_encoders.pkl")  # save encoders for preprocessing
-joblib.dump(target_encoder, "target_encoder.pkl")
+# Save model inside /model
+model_path = os.path.join(BASE_DIR, "model", "churn_model.pkl")
+joblib.dump(model, model_path)
+
+print(f"✅ Model trained and saved at: {model_path}")
