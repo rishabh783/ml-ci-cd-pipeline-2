@@ -17,7 +17,7 @@ print("📂 Loading dataset from:", data_path)
 if not os.path.exists(data_path):
     raise FileNotFoundError(f"❌ Dataset not found at {data_path}")
 
-data = pd.read_csv(data_path)
+data = pd.read_csv(C:\ml-ci-cd-pipeline-2\data\Churn)
 
 # ----------------------------
 # Example preprocessing: assume 'Churn' is the target
